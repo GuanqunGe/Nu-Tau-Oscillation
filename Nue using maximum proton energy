@@ -1,0 +1,126 @@
+void ptrans(){
+        TFile* f = new TFile("/pnfs/uboone/persistent/users/gge/NuTauOscillation/vertexed_sample/vertexed_MConly_Intrinsic_NuE_CC_20k.root");
+        TTree* tree = (TTree*)f->Get("singlephotonana/vertex_tree");
+        TH1* ptrans= NULL;
+        ptrans= new TH1D("pt","pt",200,0,3);
+        TH1D* maxenergies= new TH1D("maxenergies","maxenergies",200, 0, 5);
+        TH1D* protonpt = new TH1D("protonpt", "protonpt",200, 0, 5);
+        TH1D* protonpx = new TH1D("protonpx", "protonpx",200, -3, 5);
+        TH1D* protonpy = new TH1D("protonpy", "protonpy",200, -3, 5);
+        TH1D* electronpt= new TH1D("electronpt", "electronpt",200,0, 5);
+        TH1D* electrone = new TH1D("electrone", "electrone",200, 0, 5);
+
+        std::vector<int>* mctruth_daughters_pdg = NULL;
+        std::vector<double>* mctruth_daughters_px = NULL;
+        std::vector<double>* mctruth_daughters_py = NULL;
+        std::vector<int>* mctruth_daughters_status_code = NULL;
+        std::vector<int>* mctruth_daughters_trackID = NULL;
+        std::vector<int>* mctruth_daughters_mother_trackID = NULL;
+        std::vector<double>* mctruth_daughters_E = NULL;
+        int mctruth_cc_or_nc = 0;
+        double max;
+        int k;
+        int track;
+        std::vector<double> penergies;
+        std::vector<double> px;
+        std::vector<double> py;
+        std::vector<double> pt;
+        int index;
+
+        tree->SetBranchAddress("mctruth_daughters_pdg", &mctruth_daughters_pdg);
+        tree->SetBranchAddress("mctruth_daughters_px", &mctruth_daughters_px);
+        tree->SetBranchAddress("mctruth_daughters_py", &mctruth_daughters_py);
+        tree->SetBranchAddress("mctruth_daughters_status_code", &mctruth_daughters_status_code);
+        tree->SetBranchAddress("mctruth_daughters_trackID", &mctruth_daughters_trackID);
+        tree->SetBranchAddress("mctruth_daughters_mother_trackID", &mctruth_daughters_mother_trackID);
+        tree->SetBranchAddress("mctruth_daughters_E", &mctruth_daughters_E);
+        tree->SetBranchAddress("mctruth_cc_or_nc", &mctruth_cc_or_nc);
+
+
+        for (int iEntry =0; iEntry<tree->GetEntries(); ++iEntry)
+        {
+           tree->GetEntry(iEntry);
+                //cc interaction
+                if (mctruth_cc_or_nc==0){
+                        for(int j=0; j<mctruth_daughters_pdg->size();j++)
+                        {
+                                //electron that leaves the nucleus
+                                if(mctruth_daughters_status_code->at(j)== 1&& abs(mctruth_daughters_pdg->at(j)) ==11)
+                                {
+                                        max= 0; //will hold the maximum energy
+                                        index=0; //will hold its index in the energy vector
+                                        for(int i=0; i<mctruth_daughters_pdg->size();i++)
+                                        {
+                                                // making a vector of proton energies
+                                                if(mctruth_daughters_pdg->at(i) ==2212&&mctruth_daughters_status_code->at(i)==1)
+                                                {
+                                                        penergies.push_back(mctruth_daughters_E->at(i));
+                                                        px.push_back(mctruth_daughters_px->at(i));
+                                                        py.push_back(mctruth_daughters_py->at(i));
+                                                        pt.push_back(sqrt((px.at(k)+mctruth_daughters_px->at(j))*(px.at(k)+mctruth_daughters_px->at(j))+(py.at(k)+mctruth_daughters_py->at(j))*py.at(k)+mctruth_daughters_py->at(j)));
+                                                }
+                                        }
+                                        //finding the maximum proton energy
+                                        for(int m=0;m<penergies.size();m++)
+                                        {
+                                                if(penergies.at(m)>max)
+                                                {
+                                                        //just the kinetic energy
+                                                        max= penergies.at(m)-0.938;
+                                                        index=m;
+                                                }
+                                        }
+                                        //only filling the histograms if there is a proton
+                                        if(penergies.size()>0){
+                                        protonpx->Fill(px.at(index));
+                                        protonpy->Fill(py.at(index));
+                                        maxenergies->Fill(max);
+                                        ptrans->Fill(pt.at(index));
+  protonpt->Fill(sqrt(px.at(index)*px.at(index)+py.at(index)*py.at(index)));
+                                        electronpt->Fill(sqrt(mctruth_daughters_px->at(j)*mctruth_daughters_px->at(j)+mctruth_daughters_py->at(j)*mctruth_daughters_py->at(j)));
+                                        electrone->Fill(mctruth_daughters_E->at(j));
+                                   }
+                                        penergies.clear();
+                                        px.clear();
+                                        py.clear();
+                                        pt.clear();
+
+                                }
+
+                        }
+                }
+        }
+        
+     //drawing the histograms
+     auto c = new TCanvas("c","c");
+
+     maxenergies->Draw();
+     maxenergies->GetYaxis()->SetTitle("Number events");
+     maxenergies->GetXaxis()->SetTitle("KE(GeV)");
+
+     electrone->Draw();
+     electrone->GetYaxis()->SetTitle("Number events");
+     electrone->GetXaxis()->SetTitle("E(GeV)");
+     
+     ptrans->Draw();
+     ptrans->GetYaxis()->SetTitle("Number events");
+     ptrans->GetXaxis()->SetTitle("pt(GeV)");
+
+     protonpx->Draw();
+     protonpx->GetYaxis()->SetTitle("Number events");
+     protonpx->GetXaxis()->SetTitle("px(GeV)");
+
+     protonpy->Draw();
+     protonpy->GetYaxis()->SetTitle("Number events");
+     protonpy->GetXaxis()->SetTitle("py(GeV)");
+
+     protonpt->Draw();
+     protonpt->GetYaxis()->SetTitle("Number events");
+     protonpt->GetXaxis()->SetTitle("pt(GeV)");
+
+    electronpt->Draw();
+    electronpt->GetYaxis()->SetTitle("Number events");
+    electronpt->GetXaxis()->SetTitle("pt(GeV)");
+
+     return;
+}

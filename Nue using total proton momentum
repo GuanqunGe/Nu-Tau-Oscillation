@@ -1,0 +1,98 @@
+void ptotal(){
+        TFile* f = new TFile("/pnfs/uboone/persistent/users/gge/NuTauOscillation/vertexed_sample/vertexed_MConly_Intrinsic_NuE_CC_20k.root");
+        TTree* tree = (TTree*)f->Get("singlephotonana/vertex_tree");
+        TH1* ptrans= NULL;
+        ptrans= new TH1D("pt","pt",200,0,3);
+        TH1D* protonE= new TH1D("protonE","protonE",200, 0, 5);
+        TH1D* protonpt = new TH1D("protonpt", "protonpt",200, 0, 5);
+        TH1D* protonpx = new TH1D("protonpx", "protonpx",200, -3, 5);
+        TH1D* protonpy = new TH1D("protonpy", "protonpy",200, -3, 5);
+        TH1D* electronpt= new TH1D("electronpt", "electronpt",200,0, 5);
+        TH1D* electrone = new TH1D("electrone", "electrone",200, 0, 5);
+
+        std::vector<int>* mctruth_daughters_pdg = NULL;
+        std::vector<double>* mctruth_daughters_px = NULL;
+        std::vector<double>* mctruth_daughters_py = NULL;
+        std::vector<int>* mctruth_daughters_status_code = NULL;
+        std::vector<int>* mctruth_daughters_trackID = NULL;
+        std::vector<int>* mctruth_daughters_mother_trackID = NULL;
+        std::vector<double>* mctruth_daughters_E = NULL;
+        int mctruth_cc_or_nc = 0;
+        double px;
+        double py;
+        double pt;
+
+
+        tree->SetBranchAddress("mctruth_daughters_pdg", &mctruth_daughters_pdg);
+        tree->SetBranchAddress("mctruth_daughters_px", &mctruth_daughters_px);
+        tree->SetBranchAddress("mctruth_daughters_py", &mctruth_daughters_py);
+        tree->SetBranchAddress("mctruth_daughters_status_code", &mctruth_daughters_status_code);
+        tree->SetBranchAddress("mctruth_daughters_trackID", &mctruth_daughters_trackID);
+        tree->SetBranchAddress("mctruth_daughters_mother_trackID", &mctruth_daughters_mother_trackID);
+        tree->SetBranchAddress("mctruth_daughters_E", &mctruth_daughters_E);
+        tree->SetBranchAddress("mctruth_cc_or_nc", &mctruth_cc_or_nc);
+
+
+        for (int iEntry =0; iEntry<tree->GetEntries(); ++iEntry)
+        {
+                tree->GetEntry(iEntry);
+                if (mctruth_cc_or_nc==0){
+                       px=0; py=0; pt=0;
+                       bool has_proton=false;
+                        for(int i=0; i<mctruth_daughters_pdg->size();i++)
+                        {
+                                //total px, py
+                                if(mctruth_daughters_pdg->at(i) ==2212&&mctruth_daughters_status_code->at(i)==1&&(mctruth_daughters_E->at(i)-0.938>0.05))
+                                {
+                                        px=px+mctruth_daughters_px->at(i);
+                                        py=py+mctruth_daughters_py->at(i);
+                                        has_proton= true;
+                                }
+
+
+                        }
+                        for(int j=0; j<mctruth_daughters_pdg->size();j++){
+                                //electron that exits the nucleus, there has to be a proton
+                                if(has_proton&&abs(mctruth_daughters_pdg->at(j))==11&&mctruth_daughters_status_code->at(j)==1){
+                                        pt=sqrt((px+mctruth_daughters_px->at(j))*(px+mctruth_daughters_px->at(j))+(py+mctruth_daughters_py->at(j))*(py+mctruth_daughters_py->at(j)));
+                                        protonpx->Fill(px);
+                                        protonpy->Fill(py);
+                                        ptrans->Fill(pt);
+                                        protonpt->Fill(sqrt(px*px+py*py));
+                                        electronpt->Fill(sqrt(mctruth_daughters_px->at(j)*mctruth_daughters_px->at(j)+mctruth_daughters_py->at(j)*mctruth_daughters_py->at(j)));
+                                        electrone->Fill(mctruth_daughters_E->at(j));
+                                }
+                        }
+                }                                       }
+
+
+
+        auto c = new TCanvas("c","c");
+        
+        electrone->Draw();
+        electrone->GetYaxis()->SetTitle("Number events");
+        electrone->GetXaxis()->SetTitle("E(GeV)");
+        
+        ptrans->Draw();
+        ptrans->GetYaxis()->SetTitle("Number events");
+        ptrans->GetXaxis()->SetTitle("pt(GeV)");
+
+        protonpx->Draw();
+        protonpx->GetYaxis()->SetTitle("Number events");
+        protonpx->GetXaxis()->SetTitle("px(GeV)");
+
+        protonpy->Draw();
+        protonpy->GetYaxis()->SetTitle("Number events");
+        protonpy->GetXaxis()->SetTitle("py(GeV)");
+
+
+        protonpt->Draw();
+        protonpt->GetYaxis()->SetTitle("Number events");
+        protonpt->GetXaxis()->SetTitle("proton pt(GeV)");
+
+        electronpt->Draw();
+        electronpt->GetYaxis()->SetTitle("Number events");
+        electronpt->GetXaxis()->SetTitle("pt(GeV)");
+
+        return;
+}

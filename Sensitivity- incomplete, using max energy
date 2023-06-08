@@ -1,0 +1,116 @@
+//THIS CODE DOES NOT RUN PROPERLY, CHANGES ARE NEEDED
+void sensitivity(){
+        TFile* f1 = new TFile("/pnfs/uboone/persistent/users/gge/NuTauOscillation/vertexed_sample/vertexed_MConly_Fullosc_NuTau_CC_20k.root");
+        TFile* f2 = new TFile("/pnfs/uboone/persistent/users/gge/NuTauOscillation/vertexed_sample/vertexed_MConly_Intrinsic_NuE_CC_20k.root");
+        TTree* tree1 = (TTree*)f1->Get("singlephotonana/vertex_tree");
+        TTree* tree2 = (TTree*)f2->Get("singlephotonana/vertex_tree");
+        TH1D* ptrans1= new TH1D("pt","pt",200,0,3);
+        TH1D* ptrans2= new TH1D("pt","pt",200,0,3);
+        std::vector<int>* mctruth_daughters_pdg1 = NULL;
+        std::vector<double>* mctruth_daughters_px1 = NULL;
+        std::vector<double>* mctruth_daughters_py1= NULL;
+        std::vector<int>* mctruth_daughters_status_code1 = NULL;
+        std::vector<int>* mctruth_daughters_trackID1 = NULL;
+        std::vector<int>* mctruth_daughters_mother_trackID1 = NULL;
+        std::vector<double>* mctruth_daughters_E1 = NULL;
+        int mctruth_cc_or_nc1 = 0;
+        std::vector<int>* mctruth_daughters_pdg2 = NULL;
+        std::vector<double>* mctruth_daughters_px2 = NULL;
+        std::vector<double>* mctruth_daughters_py2 = NULL;
+        std::vector<int>* mctruth_daughters_status_code2 = NULL;
+        std::vector<int>* mctruth_daughters_trackID2 = NULL;
+        std::vector<int>* mctruth_daughters_mother_trackID2 = NULL;
+        std::vector<double>* mctruth_daughters_E2 = NULL;
+        int mctruth_cc_or_nc2 = 0;
+        int x=0;
+
+        tree1->SetBranchAddress("mctruth_daughters_pdg1", &mctruth_daughters_pdg1);
+        tree1->SetBranchAddress("mctruth_daughters_px1", &mctruth_daughters_px1);
+        tree1->SetBranchAddress("mctruth_daughters_py1", &mctruth_daughters_py1);
+        tree1->SetBranchAddress("mctruth_daughters_status_code1", &mctruth_daughters_status_code1);
+        tree1->SetBranchAddress("mctruth_daughters_trackID1", &mctruth_daughters_trackID1);
+        tree1->SetBranchAddress("mctruth_daughters_mother_trackID1", &mctruth_daughters_mother_trackID1);
+        tree1->SetBranchAddress("mctruth_daughters_E1", &mctruth_daughters_E1);
+        tree1->SetBranchAddress("mctruth_cc_or_nc1", &mctruth_cc_or_nc1);
+
+        tree2>SetBranchAddress("mctruth_daughters_pdg2", &mctruth_daughters_pdg2);
+        tree2->SetBranchAddress("mctruth_daughters_px2", &mctruth_daughters_px2);
+        tree2->SetBranchAddress("mctruth_daughters_py2", &mctruth_daughters_py2);
+        tree2->SetBranchAddress("mctruth_daughters_status_code2", &mctruth_daughters_status_code2);
+        tree2->SetBranchAddress("mctruth_daughters_trackID2", &mctruth_daughters_trackID2);
+        tree2->SetBranchAddress("mctruth_daughters_mother_trackID2", &mctruth_daughters_mother_trackID2);
+        tree2->SetBranchAddress("mctruth_daughters_E2", &mctruth_daughters_E2);
+tree2->SetBranchAddress("mctruth_cc_or_nc2", &mctruth_cc_or_nc2);
+
+        //first finding pt using tau decay
+        for (int iEntry =0; iEntry<tree->GetEntries(); ++iEntry)
+        {
+                tree1->GetEntry(iEntry);
+                if (mctruth_cc_or_nc1==0){
+                        for(int k=0; k<mctruth_daughters_pdg1->size();k++)
+                        {
+                                //tau
+                                if(mctruth_daughters_pdg1->at(k)==15){
+                                        x=mctruth_daughters_trackID1->at(k);
+                                }
+                        }
+
+                        pt1=0;
+                        bool has_proton= false;
+                        for(int i=0; i<mctruth_daughters_pdg1->size();i++)
+                        {
+                                //total proton px.py
+                                if(mctruth_daughters_pdg1->at(i) ==2212&&mctruth_daughters_status_code1->at(i)==1&&(mctruth_daughters_E1->at(i)-0.938)>0.05)
+                                {
+                                        px=px+mctruth_daughters_px1->at(i);
+                                        py=py+mctruth_daughters_py1->at(i);
+                                        has_proton=true;
+
+                                }
+                        }
+
+                        for(int j=0; j<mctruth_daughters_pdg1->size();j++){
+                            //electron that leaves the nucleus and comes from tau
+                            if(has_proton&&x==mctruth_daughters_mother_trackID1->at(j)&&mctruth_daughters_status_code1->at(j)== 1&& abs(mctruth_daughters_pdg1->at(j)) ==11)
+                                {
+                                        pt1=sqrt((px+mctruth_daughters_px1->at(j))*(px+mctruth_daughters_px1->at(j))+(py+mctruth_daughters_py1->at(j))*(py+mctruth_daughters_py1->at(j)));
+                                        ptrans1->Fill(pt1);
+
+                                }
+                        }
+                }
+        }
+
+        //done with tau, starting electron
+        for (int iEntry =0; iEntry<tree2->GetEntries(); ++iEntry)
+        {
+                tree2->GetEntry(iEntry);
+                if (mctruth_cc_or_nc2==0){
+
+                         pt2=0;
+                        bool has_proton=false;
+                        for(int i=0; i<mctruth_daughters_pdg2->size();i++)
+                        {
+
+                                if(mctruth_daughters_pdg2->at(i) ==2212&&mctruth_daughters_status_code2->at(i)==1&&(mctruth_daughters_E2->at(i)-0.938>0.05))
+                                {
+                                        px=px+mctruth_daughters_px2->at(i);
+                                        py=py+mctruth_daughters_py2->at(i);
+                                        has_proton= true;
+                                }
+                        }
+
+                        for(int j=0; j<mctruth_daughters_pdg2->size();j++){
+                                if(has_proton&&abs(mctruth_daughters_pdg2->at(j))==11&&mctruth_daughters_status_code2->at(j)==1){
+                                        pt2=sqrt((px+mctruth_daughters_px2->at(j))*(px+mctruth_daughters_px2->at(j))+(py+mctruth_daughters_py2->at(j))*(py+mctruth_daughters_py2->at(j)));
+                                        ptrans2>Fill(pt2);
+                                }}}
+
+                auto c = new TCanvas("c","c");
+                ptrans1->Draw();
+                ptrans2->Draw("SAME");
+                ptrans->GetYaxis()->SetTitle("Number events");
+                ptrans->GetXaxis()->SetTitle("pt(GeV)");
+
+                return;
+}

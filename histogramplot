@@ -1,0 +1,134 @@
+void histogramplot(){
+
+TFile * h1 = new TFile("maxProtonhists.root"); //max proton, electron background
+TFile * h2 = new TFile("totProtonEhists.root"); //tot proton, electron background
+TFile * h3 = new TFile("totProtonTauhists.root"); //tot proton, tau signal
+TFile * h4 = new TFile("maxProtonTauHists.root"); //max proton, tau sginal 
+
+TFile * h5 = new TFile("maxProtonhists2.root"); //max proton, elec bg 2
+TFile * h6 = new TFile("maxProtonTauHists2.root"); //max proton, tau signal 2
+
+//histograms from max proton, electron background
+TH1D * electronpt_max = (TH1D*)h1->Get("electronpt");
+TH1D * protonpx = (TH1D*)h1->Get("protonpx");
+TH1D * protonpy = (TH1D*)h1->Get("protonpy");
+
+
+//histograms from tot proton mom, electron background
+TH1D * electronpt_tot = (TH1D*)h2->Get("electronpt");
+
+//histograms from tot proton mom, tau signal
+TH1D * electronpt_tau = (TH1D*)h3->Get("electronpt");
+
+
+//hostoframs from max proton, tau signal
+TH1D * electronpt_max_tau = (TH1D*)h4->Get("electronpt");
+
+
+//histograms from max proton, elec bg 2 (and normalization)
+TH1D * pmiss_e = (TH1D*)h5->Get("pmiss");
+
+TH1D * norm_pmiss_e = (TH1D*)pmiss_e->Clone("norm_pmiss_e");
+norm_pmiss_e->Scale(1./norm_pmiss_e->Integral(), "width");
+norm_pmiss_e->SetLineColor(kRed);
+
+TH1D * elec_theta = (TH1D*)h5->Get("theta_lh");
+TH1D * norm_elec_theta = (TH1D*)elec_theta->Clone("norm_elec_theta");
+norm_elec_theta->Scale(1./norm_elec_theta->Integral(), "width");
+
+
+//histograms from max proton, tau signal 2 (and normalization)
+TH1D * pmiss_t = (TH1D*)h6->Get("pmiss");
+
+TH1D * norm_pmiss_t = (TH1D*)pmiss_t->Clone("norm_pmiss_t");
+norm_pmiss_t->Scale(1./norm_pmiss_t->Integral(), "width");
+
+TH1D * tau_theta = (TH1D*)h6->Get("theta_lh");
+TH1D * norm_tau_theta = (TH1D*)tau_theta->Clone("norm_tau_theta");
+norm_tau_theta->Scale(1./norm_tau_theta->Integral(), "width");
+
+//normalized tau signal max proton
+TH1D * norm_max_tau = (TH1D*)electronpt_max_tau->Clone("norm_max_tau");
+norm_max_tau->Scale(1./norm_max_tau->Integral(), "width");
+norm_max_tau->SetLineColor(kRed);
+
+
+//normalized tau signal tot proton
+TH1D * norm_tau = (TH1D*)electronpt_tau->Clone("norm_tau");
+norm_tau->Scale(1./norm_tau->Integral(), "width");
+norm_tau->SetLineColor(kRed);
+
+
+//normalize electron bg max proton
+TH1D * norm_max_elec = (TH1D*)electronpt_max->Clone("norm_max_elec");
+norm_max_elec->Scale(1./norm_max_elec->Integral(), "width");
+
+//normalize electron bg tot proton
+TH1D * norm_elec = (TH1D*)electronpt_tot->Clone("norm_elec");
+norm_elec->Scale(1./norm_elec->Integral(), "width");
+
+
+//making canvas and drawing histograms
+TCanvas * c = new TCanvas("c", "c");
+
+norm_pmiss_e->Draw("c");
+norm_pmiss_t->Draw("c->same");
+
+
+TCanvas * c2 = new TCanvas("c2", "c2");
+c2->cd();
+TPad * pad1 = new TPad("pad1", "pad1", 0,0,0.5,0.5);
+pad1->Draw();
+pad1-> cd();
+norm_pmiss_e->Draw();
+
+c2->cd();
+TPad * pad2 = new TPad("pad2", "pad2", 0.5, 0.5, 1,1);
+
+pad2->Draw();
+pad2->cd();
+norm_pmiss_t->Draw("SAME");
+
+TCanvas * c3 = new TCanvas("c3", "c3");
+c3->cd();
+norm_elec_theta->Draw();
+norm_elec_theta->SetLineColor(kRed);
+norm_tau_theta->Draw("SAME");
+
+auto legend = new TLegend();
+legend->AddEntry(norm_elec_theta, "Electron Background");
+legend->AddEntry(norm_tau_theta, "Tau Signal");
+legend->Draw();
+
+/*
+c->cd();
+norm_max_elec->Draw("c");
+norm_max_elec->SetTitle("Maximum Proton Momentum Signal & Background");
+norm_max_tau->Draw("c->same");
+
+
+electronpt_max->Draw("c");
+electronpt_tot->Draw("c->same");
+electronpt_tau->Draw("c->same");
+
+TCanvas * c2 = new TCanvas("c2", "c2");
+
+c2->cd();
+norm_elec->Draw("c2");
+norm_elec->SetTitle("Total Proton Momentum Signal & Background");
+norm_tau->Draw("c2->same");
+
+
+TCanvas * c3 = new TCanvas("c3", "c3");
+
+electronpt_tau->Draw("c3");
+electronpt_tau->SetLineColor(kRed);
+electronpt_max_tau->Draw("c3->same");
+
+
+
+*/
+
+
+
+}
